@@ -131,6 +131,75 @@ final class AstSsotReader {
         return DriverManager.getConnection("jdbc:sqlite:" + dbPath.toAbsolutePath());
     }
 
+    int latestCrosswalkRunId(Connection conn) throws SQLException {
+        if (!tableExists(conn, "crosswalk_run")) {
+            throw new SQLException("No crosswalk_run table in linked database");
+        }
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT id FROM crosswalk_run ORDER BY id DESC LIMIT 1")) {
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) {
+                    throw new SQLException("No crosswalk_run row found");
+                }
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    int countCrosswalkIssueErrors(Connection conn) throws SQLException {
+        if (!tableExists(conn, "crosswalk_issue")) {
+            return 0;
+        }
+        int runId = latestCrosswalkRunId(conn);
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT COUNT(*) FROM crosswalk_issue WHERE crosswalk_run_id = ? AND severity = 'error'")) {
+            ps.setInt(1, runId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    int countCrosswalkLinks(Connection conn) throws SQLException {
+        if (!tableExists(conn, "code_schema_link")) {
+            return 0;
+        }
+        int runId = latestCrosswalkRunId(conn);
+        try (PreparedStatement ps = conn.prepareStatement(
+                "SELECT COUNT(*) FROM code_schema_link WHERE crosswalk_run_id = ?")) {
+            ps.setInt(1, runId);
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
+    int countFieldLinksForTypeProfile(
+            Connection conn, String typeStableId, String profileId) throws SQLException {
+        if (!tableExists(conn, "code_schema_link")) {
+            return 0;
+        }
+        int runId = latestCrosswalkRunId(conn);
+        try (PreparedStatement ps = conn.prepareStatement(
+                """
+                SELECT COUNT(*) FROM code_schema_link
+                WHERE crosswalk_run_id = ?
+                  AND edge_kind = 'field_maps_to_column'
+                  AND profile_id = ?
+                  AND source_stable_id LIKE ?
+                """)) {
+            ps.setInt(1, runId);
+            ps.setString(2, profileId);
+            ps.setString(3, typeStableId + "#%");
+            try (ResultSet rs = ps.executeQuery()) {
+                rs.next();
+                return rs.getInt(1);
+            }
+        }
+    }
+
     private static boolean tableExists(Connection conn, String table) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?")) {

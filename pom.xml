@@ -6,7 +6,7 @@
 
     <groupId>com.anchor-migration</groupId>
     <artifactId>parity-verify</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <name>parity-verify</name>
     <description>Structural parity reports for Anchor Migration — compare java-ast-ssot snapshots before and after rewrite</description>
 

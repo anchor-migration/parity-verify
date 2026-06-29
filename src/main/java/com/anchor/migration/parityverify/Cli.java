@@ -9,7 +9,7 @@ import java.util.concurrent.Callable;
 @Command(
         name = "parity-verify",
         mixinStandardHelpOptions = true,
-        version = "0.1.0-SNAPSHOT",
+        version = "0.2.0-SNAPSHOT",
         subcommands = {CompareCommand.class})
 public final class Cli implements Callable<Integer> {
 

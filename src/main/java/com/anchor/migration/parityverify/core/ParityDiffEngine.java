@@ -17,7 +17,7 @@ import java.util.TreeSet;
 
 public final class ParityDiffEngine {
 
-    private static final String TOOL_VERSION = "0.1.0-SNAPSHOT";
+    private static final String TOOL_VERSION = "0.2.0-SNAPSHOT";
 
     private final AstSsotReader reader = new AstSsotReader();
 
