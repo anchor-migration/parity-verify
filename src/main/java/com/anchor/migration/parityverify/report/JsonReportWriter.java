@@ -11,6 +11,10 @@ import java.util.Map;
 public final class JsonReportWriter {
 
     public void write(Path output, ParityReport report) throws IOException {
+        Path parent = output.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
         Files.writeString(output, toJson(report));
     }
 
