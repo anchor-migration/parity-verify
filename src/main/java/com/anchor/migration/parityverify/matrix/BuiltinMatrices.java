@@ -1,33 +1,52 @@
 package com.anchor.migration.parityverify.matrix;
 
-import com.anchor.migration.parityverify.core.BehavioralMatrixRunner;
 import com.anchor.migration.parityverify.core.MatrixContext;
+import com.anchor.migration.parityverify.core.YamlMatrixLoader;
 import com.anchor.migration.parityverify.model.BehavioralMatrixResult;
+import com.anchor.migration.parityverify.model.MatrixSpec;
 
-import java.util.HashMap;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.function.Function;
 
 public final class BuiltinMatrices {
 
-    private static final Map<String, Function<MatrixContext, BehavioralMatrixResult>> REGISTRY =
-            new HashMap<>();
+    private static final Map<String, String> CLASSPATH_MATRICES =
+            Map.of("dukesbank-cmp-jpa", "matrices/dukesbank-cmp-jpa.yaml");
 
-    static {
-        REGISTRY.put("dukesbank-cmp-jpa", BehavioralMatrixRunner::dukesbankCmpJpa);
-    }
+    private static final YamlMatrixLoader LOADER = new YamlMatrixLoader();
 
     private BuiltinMatrices() {}
 
     public static boolean exists(String matrixId) {
-        return REGISTRY.containsKey(matrixId);
+        return CLASSPATH_MATRICES.containsKey(matrixId);
     }
 
     public static BehavioralMatrixResult run(String matrixId, MatrixContext context) {
-        Function<MatrixContext, BehavioralMatrixResult> runner = REGISTRY.get(matrixId);
-        if (runner == null) {
+        String resource = CLASSPATH_MATRICES.get(matrixId);
+        if (resource == null) {
             throw new IllegalArgumentException("Unknown behavioral matrix: " + matrixId);
         }
-        return runner.apply(context);
+        return evaluateClasspath(resource, context);
+    }
+
+    public static BehavioralMatrixResult runFromFile(Path yamlPath, MatrixContext context)
+            throws IOException {
+        MatrixSpec spec = LOADER.load(yamlPath);
+        return LOADER.evaluate(spec, context);
+    }
+
+    private static BehavioralMatrixResult evaluateClasspath(String resource, MatrixContext context) {
+        try (InputStream is = BuiltinMatrices.class.getClassLoader().getResourceAsStream(resource)) {
+            if (is == null) {
+                throw new IllegalStateException("Missing classpath matrix resource: " + resource);
+            }
+            MatrixSpec spec = LOADER.load(is);
+            return LOADER.evaluate(spec, context);
+        } catch (IOException ex) {
+            throw new IllegalStateException("Failed to load matrix resource: " + resource, ex);
+        }
     }
 }

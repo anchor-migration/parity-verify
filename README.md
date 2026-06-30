@@ -15,7 +15,8 @@ Part of **[Anchor Migration](https://github.com/anchor-migration/migration-hub)*
 | Optional diff of `code_schema_link` rows | AI-assisted test case generation |
 | JSON parity report | |
 | **HTML parity report** (`--html-out`) | |
-| **Behavioral matrix** (`--matrix dukesbank-cmp-jpa`) | Custom matrix YAML loader |
+| **Behavioral matrix** (`--matrix` / `--matrix-file`) | |
+| Custom matrix YAML | ✅ `examples/matrices/` + rule engine |
 
 ## CLI
 
@@ -26,7 +27,7 @@ java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
   --after-db metadata/dukesbank-code-after.db \
   -o parity-report.json
 
-# Structural diff + behavioral matrix + HTML (Duke's Bank CMP→JPA)
+# Structural diff + built-in matrix (loads YAML from classpath)
 java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
   --before-db metadata/dukesbank-code-before.db \
   --after-db metadata/dukesbank-code-after.db \
@@ -37,6 +38,15 @@ java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
   -o parity-report.json \
   --html-out parity-report.html \
   --fail-on-matrix
+
+# Same matrix from a custom YAML file on disk
+java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
+  --before-db metadata/dukesbank-code-before.db \
+  --after-db metadata/dukesbank-code-after.db \
+  --linked-after metadata/dukesbank-linked-after.db \
+  --matrix-file examples/matrices/dukesbank-cmp-jpa.yaml \
+  --touchpoint-source /work/src/.../AccountBean.java \
+  -o parity-report.json
 
 # Include crosswalk-linked DBs (optional)
 java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
@@ -80,6 +90,46 @@ Scoped checks for Duke's Bank `CmpScalarEntityToJpa` on `AccountBean` — use `-
 Combined JSON wraps structural + behavioral under `structural` / `behavioral` keys. HTML report (`--html-out`) includes summary cards, matrix table, and change list.
 
 Use `--fail-on-matrix` in CI when behavioral checks should gate the pipeline (distinct from raw `--fail-on-drift`).
+
+## Custom matrix YAML
+
+Built-in matrix ids (e.g. `dukesbank-cmp-jpa`) load YAML from `src/main/resources/matrices/`. Edit a copy under `examples/matrices/` or author your own and pass `--matrix-file`.
+
+```yaml
+id: my-migration-matrix
+description: "Scoped parity checks for a single entity rewrite"
+checks:
+  - id: scope_guard
+    kind: structural
+    rule: no_drift_outside
+    scope_prefix: com.example.Foo
+  - id: crosswalk_clean
+    kind: crosswalk
+    rule: zero_crosswalk_errors
+  - id: touchpoint_jpa
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.Entity"
+```
+
+### Rule reference
+
+| `rule` | Required fields | Description |
+|--------|-----------------|-------------|
+| `no_drift_outside` | `scope_prefix` | No removed/modified stable IDs outside scope |
+| `scoped_attr_allowlist` | `scope_prefix`, `allowed_*_attrs` | In-scope mods only change listed attributes |
+| `return_types_unchanged` | `scope_prefix` | Modified methods keep `return_type` |
+| `added_fields_count` | `scope_prefix`, `count` | Exactly N added fields in scope |
+| `added_fields_min` | `scope_prefix`, `min` | At least N added fields in scope |
+| `removed_methods_allowlist` | `scope_prefix`, `patterns` | Removed methods must match a substring pattern |
+| `zero_crosswalk_errors` | — | Zero `crosswalk_issue` errors in `--linked-after` |
+| `min_link_count` | `min` | Total crosswalk links ≥ min |
+| `min_field_links` | `type_stable_id`, `profile_id`, `min` | JPA/EJB field column links for a type |
+| `source_contains` | `patterns` | `--touchpoint-source` contains all patterns |
+| `source_not_contains` | `patterns` | Touchpoint source contains none of the patterns |
+
+Check `kind`: `structural`, `crosswalk`, or `behavioral` (metadata only; all rules use the same engine).
 
 ## JSON report
 

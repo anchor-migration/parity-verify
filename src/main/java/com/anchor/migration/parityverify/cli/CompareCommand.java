@@ -48,6 +48,11 @@ public final class CompareCommand implements Callable<Integer> {
     String matrix;
 
     @Option(
+            names = {"--matrix-file"},
+            description = "Path to a custom behavioral matrix YAML file")
+    Path matrixFile;
+
+    @Option(
             names = {"--touchpoint-source"},
             description = "Optional migrated source file for touchpoint behavioral checks")
     Path touchpointSource;
@@ -65,21 +70,25 @@ public final class CompareCommand implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         ParityReport report = new ParityDiffEngine().compare(beforeDb, afterDb, linkedBeforeDb, linkedAfterDb);
+        if (matrix != null && matrixFile != null) {
+            System.err.println("Specify either --matrix or --matrix-file, not both.");
+            return 1;
+        }
         BehavioralMatrixResult behavioral = null;
-        if (matrix != null) {
-            if (!BuiltinMatrices.exists(matrix)) {
-                System.err.println("Unknown matrix: " + matrix);
-                return 1;
+        if (matrix != null || matrixFile != null) {
+            MatrixContext context = new MatrixContext(
+                    beforeDb, afterDb, linkedBeforeDb, linkedAfterDb,
+                    report, Optional.ofNullable(touchpointSource));
+            if (matrix != null) {
+                if (!BuiltinMatrices.exists(matrix)) {
+                    System.err.println("Unknown built-in matrix: " + matrix);
+                    System.err.println("Use --matrix-file to load a custom YAML matrix.");
+                    return 1;
+                }
+                behavioral = BuiltinMatrices.run(matrix, context);
+            } else {
+                behavioral = BuiltinMatrices.runFromFile(matrixFile, context);
             }
-            MatrixContext context =
-                    new MatrixContext(
-                            beforeDb,
-                            afterDb,
-                            linkedBeforeDb,
-                            linkedAfterDb,
-                            report,
-                            Optional.ofNullable(touchpointSource));
-            behavioral = BuiltinMatrices.run(matrix, context);
         }
 
         if (behavioral != null) {
@@ -92,7 +101,7 @@ public final class CompareCommand implements Callable<Integer> {
         } else {
             new JsonReportWriter().write(out, report);
             if (htmlOut != null) {
-                throw new IllegalArgumentException("--html-out requires --matrix");
+                throw new IllegalArgumentException("--html-out requires --matrix or --matrix-file");
             }
         }
 
