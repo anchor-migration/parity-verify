@@ -27,7 +27,7 @@ class YamlMatrixLoaderTest {
     Path tempDir;
 
     @Test
-    void loadsDukesbankMatrixFromClasspath() {
+    void loadsDukesbankMatrixFromClasspath() throws Exception {
         YamlMatrixLoader loader = new YamlMatrixLoader();
         try (var is = getClass().getClassLoader().getResourceAsStream("matrices/dukesbank-cmp-jpa.yaml")) {
             assertNotNull(is);

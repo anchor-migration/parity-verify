@@ -22,8 +22,6 @@ import org.yaml.snakeyaml.Yaml;
  */
 public final class PatternCatalogLoader {
 
-    private final YamlMatrixLoader matrixLoader = new YamlMatrixLoader();
-
     public MatrixSpec loadPattern(Path catalogRoot, String patternId) throws IOException {
         Path patternFile = catalogRoot.resolve("patterns").resolve(patternId + ".yaml");
         if (!Files.isRegularFile(patternFile)) {
@@ -57,7 +55,7 @@ public final class PatternCatalogLoader {
                 merged);
     }
 
-    static List<MatrixCheckSpec> mergeChecks(List<MatrixCheckSpec> base, List<MatrixCheckSpec> overrides) {
+    public static List<MatrixCheckSpec> mergeChecks(List<MatrixCheckSpec> base, List<MatrixCheckSpec> overrides) {
         Map<String, MatrixCheckSpec> merged = new LinkedHashMap<>();
         for (MatrixCheckSpec check : base) {
             merged.put(check.id(), check);
@@ -88,14 +86,14 @@ public final class PatternCatalogLoader {
             Object rawChecks = verificationMap.get("checks");
             if (rawChecks instanceof List<?> list) {
                 for (Object raw : list) {
-                    checks.add(matrixLoader.parseCheckMap((Map<String, Object>) raw));
+                    checks.add(YamlMatrixLoader.parseCheckMap((Map<String, Object>) raw));
                 }
             }
         }
         Object topChecks = root.get("checks");
         if (topChecks instanceof List<?> list) {
             for (Object raw : list) {
-                checks.add(matrixLoader.parseCheckMap((Map<String, Object>) raw));
+                checks.add(YamlMatrixLoader.parseCheckMap((Map<String, Object>) raw));
             }
         }
         return new MatrixSpec(id, description, id, checks);
