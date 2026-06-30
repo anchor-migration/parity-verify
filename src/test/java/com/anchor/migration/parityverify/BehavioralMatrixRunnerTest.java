@@ -45,7 +45,8 @@ class BehavioralMatrixRunnerTest {
 
         var parity = new ParityDiffEngine().compare(beforeDb, afterDb, null, linkedAfter);
         MatrixContext context =
-                new MatrixContext(beforeDb, afterDb, null, linkedAfter, parity, Optional.of(touchpoint));
+                new MatrixContext(
+                        beforeDb, afterDb, null, linkedAfter, parity, Optional.of(touchpoint), Optional.empty());
         BehavioralMatrixResult result = BuiltinMatrices.run("dukesbank-cmp-jpa", context);
 
         assertTrue(result.allPassed(), () -> result.checks().toString());
@@ -73,7 +74,8 @@ class BehavioralMatrixRunnerTest {
         BehavioralMatrixResult result =
                 BuiltinMatrices.run(
                         "dukesbank-cmp-jpa",
-                        new MatrixContext(beforeDb, afterDb, null, null, parity, Optional.empty()));
+                        new MatrixContext(
+                                beforeDb, afterDb, null, null, parity, Optional.empty(), Optional.empty()));
 
         assertFalse(result.allPassed());
         assertTrue(
@@ -95,7 +97,8 @@ class BehavioralMatrixRunnerTest {
         BehavioralMatrixResult behavioral =
                 BuiltinMatrices.run(
                         "dukesbank-cmp-jpa",
-                        new MatrixContext(beforeDb, afterDb, null, null, parity, Optional.empty()));
+                        new MatrixContext(
+                                beforeDb, afterDb, null, null, parity, Optional.empty(), Optional.empty()));
         VerificationReport report = new VerificationReport("0.2.0-SNAPSHOT", parity, behavioral);
 
         Path jsonPath = tempDir.resolve("report.json");

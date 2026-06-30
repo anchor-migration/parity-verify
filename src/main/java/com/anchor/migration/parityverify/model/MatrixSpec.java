@@ -19,4 +19,4 @@ import java.util.List;
  *     rule: zero_crosswalk_errors
  * </pre>
  */
-public record MatrixSpec(String id, String description, List<MatrixCheckSpec> checks) {}
+public record MatrixSpec(String id, String description, String patternId, List<MatrixCheckSpec> checks) {}

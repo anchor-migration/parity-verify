@@ -53,6 +53,11 @@ public final class CompareCommand implements Callable<Integer> {
     Path matrixFile;
 
     @Option(
+            names = {"--pattern-catalog"},
+            description = "Root of pattern-catalog repo (patterns/ subfolder); optional if pattern is bundled")
+    Path patternCatalog;
+
+    @Option(
             names = {"--touchpoint-source"},
             description = "Optional migrated source file for touchpoint behavioral checks")
     Path touchpointSource;
@@ -77,8 +82,13 @@ public final class CompareCommand implements Callable<Integer> {
         BehavioralMatrixResult behavioral = null;
         if (matrix != null || matrixFile != null) {
             MatrixContext context = new MatrixContext(
-                    beforeDb, afterDb, linkedBeforeDb, linkedAfterDb,
-                    report, Optional.ofNullable(touchpointSource));
+                    beforeDb,
+                    afterDb,
+                    linkedBeforeDb,
+                    linkedAfterDb,
+                    report,
+                    Optional.ofNullable(touchpointSource),
+                    Optional.ofNullable(patternCatalog));
             if (matrix != null) {
                 if (!BuiltinMatrices.exists(matrix)) {
                     System.err.println("Unknown built-in matrix: " + matrix);

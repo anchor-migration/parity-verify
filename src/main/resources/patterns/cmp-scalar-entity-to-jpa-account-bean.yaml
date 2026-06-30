@@ -1,0 +1,55 @@
+# Pattern: CMP scalar entity to JPA (AccountBean) — ADR-007 §3.3
+id: cmp-scalar-entity-to-jpa-account-bean
+title: CMP scalar entity to JPA (AccountBean)
+description: "Scoped parity checks for Duke's Bank CmpScalarEntityToJpa on AccountBean"
+linked_recipes:
+  - CmpScalarEntityToJpa
+verification:
+  scope_prefix: com.sun.ebank.ejb.account.AccountBean
+  checks:
+    - id: module_quiescent
+      kind: structural
+      rule: no_drift_outside
+      scope_prefix: com.sun.ebank.ejb.account.AccountBean
+
+    - id: scoped_drift_allowlist
+      kind: structural
+      rule: scoped_attr_allowlist
+      scope_prefix: com.sun.ebank.ejb.account.AccountBean
+      allowed_method_attrs: [modifiers]
+      allowed_type_attrs: [implements_list]
+      allowed_link_attrs: [profile_id]
+
+    - id: scalar_accessor_return_types
+      kind: behavioral
+      rule: return_types_unchanged
+      scope_prefix: com.sun.ebank.ejb.account.AccountBean
+
+    - id: jpa_fields_added
+      kind: structural
+      rule: added_fields_count
+      scope_prefix: com.sun.ebank.ejb.account.AccountBean
+      count: 7
+
+    - id: crosswalk_clean
+      kind: crosswalk
+      rule: zero_crosswalk_errors
+
+    - id: crosswalk_link_count
+      kind: crosswalk
+      rule: min_link_count
+      min: 38
+
+    - id: jpa_scalar_links
+      kind: crosswalk
+      rule: min_field_links
+      type_stable_id: com.sun.ebank.ejb.account.AccountBean
+      profile_id: jpa
+      min: 7
+
+    - id: touchpoint_entity_annotation
+      kind: behavioral
+      rule: source_contains
+      patterns:
+        - "@javax.persistence.Entity"
+        - "@javax.persistence.Table"

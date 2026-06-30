@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Optional;
 
 public final class BuiltinMatrices {
 
@@ -34,7 +34,7 @@ public final class BuiltinMatrices {
 
     public static BehavioralMatrixResult runFromFile(Path yamlPath, MatrixContext context)
             throws IOException {
-        MatrixSpec spec = LOADER.load(yamlPath);
+        MatrixSpec spec = LOADER.load(yamlPath, context.patternCatalogRoot());
         return LOADER.evaluate(spec, context);
     }
 
@@ -43,7 +43,7 @@ public final class BuiltinMatrices {
             if (is == null) {
                 throw new IllegalStateException("Missing classpath matrix resource: " + resource);
             }
-            MatrixSpec spec = LOADER.load(is);
+            MatrixSpec spec = LOADER.load(is, context.patternCatalogRoot());
             return LOADER.evaluate(spec, context);
         } catch (IOException ex) {
             throw new IllegalStateException("Failed to load matrix resource: " + resource, ex);

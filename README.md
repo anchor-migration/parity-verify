@@ -12,11 +12,11 @@ Part of **[Anchor Migration](https://github.com/anchor-migration/migration-hub)*
 | In scope | Out of scope (planned) |
 |----------|-------------------------|
 | Diff `java_type`, `java_method`, `java_field` stable IDs | External integration test runners |
-| Optional diff of `code_schema_link` rows | AI-assisted test case generation |
+| Optional diff of `code_schema_link` rows | Full behavioral test execution |
 | JSON parity report | |
 | **HTML parity report** (`--html-out`) | |
-| **Behavioral matrix** (`--matrix` / `--matrix-file`) | |
-| Custom matrix YAML | ✅ `examples/matrices/` + rule engine |
+| **Behavioral matrix** (`--matrix` / `--matrix-file` + `pattern_id`) | |
+| **generate-tests** — JUnit 5 stubs from parity JSON | |
 
 ## CLI
 
@@ -93,24 +93,13 @@ Use `--fail-on-matrix` in CI when behavioral checks should gate the pipeline (di
 
 ## Custom matrix YAML
 
-Built-in matrix ids (e.g. `dukesbank-cmp-jpa`) load YAML from `src/main/resources/matrices/`. Edit a copy under `examples/matrices/` or author your own and pass `--matrix-file`.
+Built-in matrix ids (e.g. `dukesbank-cmp-jpa`) load YAML from `src/main/resources/matrices/` and resolve `pattern_id` from bundled `src/main/resources/patterns/` or `--pattern-catalog`.
 
 ```yaml
-id: my-migration-matrix
-description: "Scoped parity checks for a single entity rewrite"
-checks:
-  - id: scope_guard
-    kind: structural
-    rule: no_drift_outside
-    scope_prefix: com.example.Foo
-  - id: crosswalk_clean
-    kind: crosswalk
-    rule: zero_crosswalk_errors
-  - id: touchpoint_jpa
-    kind: behavioral
-    rule: source_contains
-    patterns:
-      - "@javax.persistence.Entity"
+id: dukesbank-cmp-jpa
+pattern_id: cmp-scalar-entity-to-jpa-account-bean
+description: "Checklist from pattern-catalog"
+checks: []   # optional overrides merged by check id
 ```
 
 ### Rule reference
@@ -130,6 +119,22 @@ checks:
 | `source_not_contains` | `patterns` | Touchpoint source contains none of the patterns |
 
 Check `kind`: `structural`, `crosswalk`, or `behavioral` (metadata only; all rules use the same engine).
+
+## generate-tests
+
+Emit JUnit 5 reflection-based stubs from a parity JSON report (human or AI fills TODO assertions):
+
+```bash
+java -jar target/parity-verify-0.2.0-SNAPSHOT.jar generate-tests \
+  --report metadata/dukesbank-parity-report.json \
+  --target-class com.sun.ebank.ejb.account.AccountBean \
+  --scope com.sun.ebank.ejb.account.AccountBean \
+  --package com.sun.ebank.test.generated \
+  --class-name AccountBeanParityTest \
+  -o AccountBeanParityTest.java
+```
+
+Supports v0.1 structural-only and v0.2 wrapped `{ "structural": { ... } }` reports.
 
 ## JSON report
 

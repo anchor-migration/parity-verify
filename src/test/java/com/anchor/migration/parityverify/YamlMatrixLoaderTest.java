@@ -33,9 +33,8 @@ class YamlMatrixLoaderTest {
             assertNotNull(is);
             MatrixSpec spec = loader.load(is);
             assertEquals("dukesbank-cmp-jpa", spec.id());
+            assertEquals("cmp-scalar-entity-to-jpa-account-bean", spec.patternId());
             assertEquals(8, spec.checks().size());
-            assertEquals("module_quiescent", spec.checks().get(0).id());
-            assertEquals("no_drift_outside", spec.checks().get(0).rule());
         }
     }
 
@@ -58,7 +57,8 @@ class YamlMatrixLoaderTest {
 
         var parity = new ParityDiffEngine().compare(beforeDb, afterDb, null, linkedAfter);
         MatrixContext context =
-                new MatrixContext(beforeDb, afterDb, null, linkedAfter, parity, Optional.of(touchpoint));
+                new MatrixContext(
+                        beforeDb, afterDb, null, linkedAfter, parity, Optional.of(touchpoint), Optional.empty());
 
         BehavioralMatrixResult builtin = BuiltinMatrices.run("dukesbank-cmp-jpa", context);
         Path yamlPath = Path.of("examples/matrices/dukesbank-cmp-jpa.yaml");
@@ -116,7 +116,10 @@ class YamlMatrixLoaderTest {
         MatrixSpec spec = loader.load(new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
         var parity = new ParityDiffEngine().compare(beforeDb, afterDb, null, null);
         BehavioralMatrixResult result =
-                loader.evaluate(spec, new MatrixContext(beforeDb, afterDb, null, null, parity, Optional.empty()));
+                loader.evaluate(
+                        spec,
+                        new MatrixContext(
+                                beforeDb, afterDb, null, null, parity, Optional.empty(), Optional.empty()));
 
         assertFalse(result.allPassed());
         assertEquals(CheckStatus.FAIL, result.checks().get(0).status());

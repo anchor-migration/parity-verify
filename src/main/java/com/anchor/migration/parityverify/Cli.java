@@ -1,6 +1,7 @@
 package com.anchor.migration.parityverify;
 
 import com.anchor.migration.parityverify.cli.CompareCommand;
+import com.anchor.migration.parityverify.cli.GenerateTestsCommand;
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
@@ -10,7 +11,7 @@ import java.util.concurrent.Callable;
         name = "parity-verify",
         mixinStandardHelpOptions = true,
         version = "0.2.0-SNAPSHOT",
-        subcommands = {CompareCommand.class})
+        subcommands = {CompareCommand.class, GenerateTestsCommand.class})
 public final class Cli implements Callable<Integer> {
 
     @Override

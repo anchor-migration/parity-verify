@@ -11,4 +11,5 @@ public record MatrixContext(
         Path linkedBeforeDb,
         Path linkedAfterDb,
         ParityReport parityReport,
-        Optional<Path> touchpointSourceFile) {}
+        Optional<Path> touchpointSourceFile,
+        Optional<Path> patternCatalogRoot) {}
