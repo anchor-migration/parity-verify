@@ -1,0 +1,24 @@
+# Duke's Bank multi-entity CMP→JPA — AccountBean scalar + ManyToMany
+id: dukesbank-cmp-jpa-multi-account
+description: "AccountBean after CmpScalarEntityToJpa + CmpManyToManyToJpa (multi-entity E2E)"
+checks:
+  - id: jpa_fields_added
+    kind: structural
+    rule: added_fields_count
+    scope_prefix: com.sun.ebank.ejb.account.AccountBean
+    count: 8
+  - id: touchpoint_entity
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.Entity"
+      - '@javax.persistence.Table(name = "ACCOUNT")'
+  - id: touchpoint_many_to_many
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.ManyToMany"
+      - "CUSTOMER_ACCOUNT_XREF"
+  - id: crosswalk_clean
+    kind: crosswalk
+    rule: zero_crosswalk_errors

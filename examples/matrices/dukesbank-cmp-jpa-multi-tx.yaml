@@ -1,0 +1,24 @@
+# Duke's Bank multi-entity CMP→JPA — TxBean scalar + ManyToOne FK
+id: dukesbank-cmp-jpa-multi-tx
+description: "TxBean after CmpScalarEntityToJpa + CmpForeignKeyToJpa (multi-entity E2E)"
+checks:
+  - id: jpa_fields_added
+    kind: structural
+    rule: added_fields_count
+    scope_prefix: com.sun.ebank.ejb.tx.TxBean
+    count: 6
+  - id: touchpoint_entity
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.Entity"
+      - '@javax.persistence.Table(name = "TX")'
+  - id: touchpoint_many_to_one
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.ManyToOne"
+      - "account_id"
+  - id: crosswalk_clean
+    kind: crosswalk
+    rule: zero_crosswalk_errors
