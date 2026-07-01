@@ -91,6 +91,31 @@ Combined JSON wraps structural + behavioral under `structural` / `behavioral` ke
 
 Use `--fail-on-matrix` in CI when behavioral checks should gate the pipeline (distinct from raw `--fail-on-drift`).
 
+## Multi-entity matrices (Duke's Bank v0.4 E2E)
+
+When multiple entities migrate in one run, use **inline** matrix YAML files (no `pattern_id`) so `module_quiescent` scopes each entity independently:
+
+| File | Entity | Report basename |
+|------|--------|-----------------|
+| `examples/matrices/dukesbank-cmp-jpa-multi-account.yaml` | `AccountBean` | `dukesbank-parity-accountbean` |
+| `examples/matrices/dukesbank-cmp-jpa-multi-customer.yaml` | `CustomerBean` | `dukesbank-parity-customerbean` |
+| `examples/matrices/dukesbank-cmp-jpa-multi-tx.yaml` | `TxBean` | `dukesbank-parity-txbean` |
+| `examples/matrices/dukesbank-cmp-jpa-multi-nextid.yaml` | `NextIdBean` | `dukesbank-parity-nextidbean` |
+
+```bash
+java -jar target/parity-verify-0.2.0-SNAPSHOT.jar compare \
+  --before-db metadata/dukesbank-code-before.db \
+  --after-db metadata/dukesbank-code-after.db \
+  --linked-after metadata/dukesbank-linked-after.db \
+  --matrix-file examples/matrices/dukesbank-cmp-jpa-multi-account.yaml \
+  --touchpoint-source /work/src/.../AccountBean.java \
+  -o metadata/dukesbank-parity-accountbean.json \
+  --html-out metadata/dukesbank-parity-accountbean.html \
+  --fail-on-matrix
+```
+
+Full pipeline: `demo-dukesbank/scripts/run-e2e-jpa-parity.ps1`.
+
 ## Custom matrix YAML
 
 Built-in matrix ids (e.g. `dukesbank-cmp-jpa`) load YAML from `src/main/resources/matrices/` and resolve `pattern_id` from bundled `src/main/resources/patterns/` or `--pattern-catalog`.
