@@ -1,0 +1,24 @@
+# Duke's Bank multi-entity CMP→JPA — NextIdBean table counter
+id: dukesbank-cmp-jpa-multi-nextid
+description: "NextIdBean after NextIdTableToJpa (multi-entity E2E)"
+checks:
+  - id: jpa_fields_added
+    kind: structural
+    rule: added_fields_count
+    scope_prefix: com.sun.ebank.ejb.util.NextIdBean
+    count: 2
+  - id: touchpoint_entity
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "@javax.persistence.Entity"
+      - '@javax.persistence.Table(name = "NEXT_ID")'
+  - id: touchpoint_get_next_id
+    kind: behavioral
+    rule: source_contains
+    patterns:
+      - "getNextId()"
+      - "setId(i)"
+  - id: crosswalk_clean
+    kind: crosswalk
+    rule: zero_crosswalk_errors
